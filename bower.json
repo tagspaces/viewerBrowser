@@ -1,5 +1,5 @@
 {
-  "name": "viewerBrowser",
+  "name": "Simple Viewer",
   "id": "viewerBrowser",
   "description": "A TagSpaces extension allowing to open files in the embedded browser.",
   "type": "viewer",
