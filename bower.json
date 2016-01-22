@@ -15,7 +15,7 @@
     "viewer",
     "iframe"
   ],
-  "license": "",
+  "license": "MIT",
   "main": [
     "extension.js"
   ],
