@@ -4,17 +4,15 @@
 define(function(require, exports, module) {
   "use strict";
 
-  console.log("Loading viewerText");
-
   var extensionID = "viewerBrowser"; // ID should be equal to the directory name where the ext. is located
   var extensionType = "viewer";
 
-  var TSCORE = require("tscore");
+  console.log("Loading " + extensionID);
 
+  var TSCORE = require("tscore");
   var containerElID,
     $containerElement,
     currentFilePath;
-
   var extensionDirectory = TSCORE.Config.getExtensionPath() + "/" + extensionID;
 
   function init(filePath, containerElementID) {
@@ -61,17 +59,17 @@ define(function(require, exports, module) {
         "nwfaketop": ""
       }));
     }
-  };
+  }
 
   function setFileType(fileType) {
 
     console.log("setFileType not supported on this extension");
-  };
+  }
 
   function viewerMode(isViewerMode) {
 
     // set readonly      
-  };
+  }
 
   function setContent(content) {
     // removing the script tags from the content 
@@ -116,12 +114,12 @@ define(function(require, exports, module) {
       });
 
     }
-  };
+  }
 
   function getContent() {
 
     console.log("Not implemented");
-  };
+  }
 
   exports.init = init;
   exports.getContent = getContent;
