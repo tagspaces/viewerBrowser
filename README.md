@@ -24,7 +24,7 @@ If you want to extend this extensions, please follow our general [extension deve
 
 ## Screenshots
 
-![Screenshot of the viewerBrowser](http://tagspaces.org/extensions/editorHTML/viewerBrowser-screenshot.png)
+![Screenshot of the viewerBrowser](http://tagspaces.org/extensions/viewerBrowser/viewerBrowser-screenshot.png)
 
 ## License
 
