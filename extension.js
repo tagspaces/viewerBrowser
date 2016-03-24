@@ -84,7 +84,7 @@ define(function(require, exports, module) {
       // making all links open in the user default browser
       $(viewerIframe.contentWindow.document).find("a").bind('click', function(e) {
         e.preventDefault();
-        TSCORE.openLinkExternally($(this).attr("href"));
+        TSCORE.IO.openFile($(this).attr("href"));
       });
 
       // fixing embedding of local images
