@@ -1,130 +1,115 @@
 /* Copyright (c) 2013-present The TagSpaces Authors.
  * Use of this source code is governed by the MIT license which can be found in the LICENSE.txt file. */
 
-define(function(require, exports, module) {
-  "use strict";
+/* globals getParameterByName, $, sendMessageToHost, isWeb, isFirefox */
 
-  var extensionID = "viewerBrowser"; // ID should be equal to the directory name where the ext. is located
-  var extensionType = "viewer";
+sendMessageToHost({ command: 'loadDefaultTextContent' });
 
-  console.log("Loading " + extensionID);
+$(document).ready(init);
+function init() {
+  const filePath = getParameterByName('file');
+  const extensionID = 'viewerBrowser'; // ID should be equal to the directory name where the ext. is located
+  // const extensionType = 'viewer';
+  console.log('Loading ' + extensionID);
 
-  var TSCORE = require("tscore");
-  var containerElID,
-    $containerElement,
-    currentFilePath;
-  var extensionDirectory = TSCORE.Config.getExtensionPath() + "/" + extensionID;
+  // const TSCORE = require('tscore');
+  let containerElID;
+  let $containerElement;
 
-  function init(filePath, containerElementID) {
-    console.log("Initalization Text Viewer...");
-    containerElID = containerElementID;
-    $containerElement = $('#' + containerElID);
+  console.log('Initalization Text Viewer...');
+  containerElID = containerElementID;
+  $containerElement = $('#' + containerElID);
 
-    currentFilePath = filePath;
+  let filePathURI;
+  if (isCordova || isWeb) {
+    filePathURI = filePath;
+  } else {
+    filePathURI = 'file:///' + filePath;
+  }
 
-    var filePathURI;
-    if (isCordova || isWeb) {
-      filePathURI = filePath;
-    } else {
-      filePathURI = "file:///" + filePath;
+  const fileExt = filePath
+    .split('.')
+    .pop()
+    .toLowerCase();
+
+  $containerElement.empty();
+  $containerElement.css('background-color', 'white');
+
+  if ((fileExt.indexOf('htm') === 0 || fileExt.indexOf('xhtm') === 0 || fileExt.indexOf('txt') === 0) && !isFirefox) {
+    $containerElement.append($('<iframe>', {
+      sandbox: 'allow-same-origin allow-scripts',
+      id: 'iframeViewer',
+      nwdisable: '',
+      nwfaketop: ''
+    }));
+  } else {
+    $containerElement.append($('<iframe>', {
+      // sandbox: "allow-same-origin allow-scripts", // comment out due not loading pdfs in chrome ext
+      id: 'iframeViewer',
+      src: filePathURI,
+      nwdisable: '',
+      nwfaketop: ''
+    }));
+  }
+}
+
+// fixing embedding of local images
+function fixingEmbeddingOfLocalImages($htmlContent, fileDirectory) {
+  const hasURLProtocol = (url) => (
+    url.indexOf('http://') === 0 ||
+      url.indexOf('https://') === 0 ||
+      url.indexOf('file://') === 0 ||
+      url.indexOf('data:') === 0
+  );
+
+  $htmlContent.find('img[src]').each((index, link) => {
+    const currentSrc = $(link).attr('src');
+    if (!hasURLProtocol(currentSrc)) {
+      const path = (isWeb ? '' : 'file://') + fileDirectory + '/' + currentSrc;
+      $(link).attr('src', path);
     }
+  });
 
-    var fileExt = TSCORE.TagUtils.extractFileExtension(filePath);
+  $htmlContent.find('a[href]').each((index, link) => {
+    let currentSrc = $(link).attr('href');
+    let path;
 
-    $containerElement.empty();
-    $containerElement.css("background-color", "white");
-
-    if ((fileExt.indexOf("htm") === 0 || fileExt.indexOf("xhtm") === 0 || fileExt.indexOf("txt") === 0) && !isFirefox) {
-      $containerElement.append($('<iframe>', {
-        sandbox: "allow-same-origin allow-scripts",
-        id: "iframeViewer",
-        "nwdisable": "",
-        "nwfaketop": ""
-      }));
-      
-      TSCORE.IO.loadTextFilePromise(filePath).then(function(content) {
-        exports.setContent(content);
-      }, 
-      function(error) {
-        TSCORE.hideLoadingAnimation();
-        TSCORE.showAlertDialog("Loading " + filePath + " failed.");
-        console.error("Loading file " + filePath + " failed " + error);
-      });
+    if (currentSrc.indexOf('#') === 0) {
+      // Leave the default link behaviour by internal links
     } else {
-      $containerElement.append($('<iframe>', {
-        // sandbox: "allow-same-origin allow-scripts", // comment out due not loading pdfs in chrome ext
-        id: "iframeViewer",
-        src: filePathURI,
-        "nwdisable": "",
-        "nwfaketop": ""
-      }));
-    }
-  }
+      if (!hasURLProtocol(currentSrc)) {
+        path = (isWeb ? '' : 'file://') + fileDirectory + '/' + currentSrc;
+        $(link).attr('href', path);
+      }
 
-  function setFileType(fileType) {
-
-    console.log("setFileType not supported on this extension");
-  }
-
-  function viewerMode(isViewerMode) {
-
-    // set readonly      
-  }
-
-  function setContent(content) {
-    // removing the script tags from the content 
-    var cleanedContent = content.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, "");
-    var viewerIframe = $("#iframeViewer").get(0);
-
-    var fileDirectory = TSCORE.TagUtils.extractContainingDirectoryPath(currentFilePath);
-
-    if (viewerIframe !== undefined) {
-      viewerIframe.contentWindow.document.write(cleanedContent);
-
-      // making all links open in the user default browser
-      $(viewerIframe.contentWindow.document).find("a").bind('click', function(e) {
+      $(link).off();
+      $(link).on('click', (e) => {
         e.preventDefault();
-        TSCORE.IO.openFile($(this).attr("href"));
-      });
-
-      // fixing embedding of local images
-      $(viewerIframe.contentWindow.document).find("img[src]").each(function() {
-        var currentSrc = $(this).attr("src");
-        if (currentSrc.indexOf("http://") === 0 ||
-            currentSrc.indexOf("https://") === 0 ||
-            currentSrc.indexOf("file://") === 0 ||
-            currentSrc.indexOf("data:") === 0) {
-          // do nothing if src begins with http(s):// or data:
-        } else {
-          $(this).attr("src", "file://" + fileDirectory + "/" + currentSrc);
+        if (path) {
+          currentSrc = encodeURIComponent(path);
         }
+        sendMessageToHost({ command: 'openLinkExternally', link: currentSrc });
       });
-
-      $(viewerIframe.contentWindow.document).find("a[href]").each(function() {
-        var currentSrc = $(this).attr("href");
-        if (currentSrc.indexOf("http://") === 0 ||
-            currentSrc.indexOf("https://") === 0 ||
-            currentSrc.indexOf("file://") === 0 ||
-            currentSrc.indexOf("data:") === 0) {
-          // do nothing if src begins with http(s):// or data:
-        } else {
-          var path = "file://" + fileDirectory + "/" + currentSrc;
-          $(this).attr("href", path);
-        }
-      });
-
     }
+  });
+}
+
+function setContent(content, fileDirectory) {
+  // removing the script tags from the content
+  const cleanedContent = content.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
+  const viewerIframe = $('#iframeViewer').get(0);
+
+  if (viewerIframe !== undefined) {
+    viewerIframe.contentWindow.document.write(cleanedContent);
+
+    // making all links open in the user default browser
+    $(viewerIframe.contentWindow.document)
+      .find('a')
+      .bind('click', (e) => {
+        e.preventDefault();
+        // TSCORE.IO.openFile($(this).attr('href'));
+      });
   }
 
-  function getContent() {
-
-    console.log("Not implemented");
-  }
-
-  exports.init = init;
-  exports.getContent = getContent;
-  exports.setContent = setContent;
-  exports.viewerMode = viewerMode;
-  exports.setFileType = setFileType;
-
-});
+  fixingEmbeddingOfLocalImages(viewerIframe, fileDirectory);
+}
