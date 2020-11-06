@@ -35,32 +35,40 @@ function init() {
   $containerElement.empty();
   $containerElement.css('background-color', 'white');
 
-  if ((fileExt.indexOf('htm') === 0 || fileExt.indexOf('xhtm') === 0 || fileExt.indexOf('txt') === 0) && !isFirefox) {
-    $containerElement.append($('<iframe>', {
-      sandbox: 'allow-same-origin allow-scripts',
-      id: 'iframeViewer',
-      nwdisable: '',
-      nwfaketop: ''
-    }));
+  if (
+    (fileExt.indexOf('htm') === 0 ||
+      fileExt.indexOf('xhtm') === 0 ||
+      fileExt.indexOf('txt') === 0) &&
+    !isFirefox
+  ) {
+    $containerElement.append(
+      $('<iframe>', {
+        sandbox: 'allow-same-origin allow-scripts',
+        id: 'iframeViewer',
+        nwdisable: '',
+        nwfaketop: ''
+      })
+    );
   } else {
-    $containerElement.append($('<iframe>', {
-      // sandbox: "allow-same-origin allow-scripts", // comment out due not loading pdfs in chrome ext
-      id: 'iframeViewer',
-      src: filePathURI,
-      nwdisable: '',
-      nwfaketop: ''
-    }));
+    $containerElement.append(
+      $('<iframe>', {
+        // sandbox: "allow-same-origin allow-scripts", // comment out due not loading pdfs in chrome ext
+        id: 'iframeViewer',
+        src: filePathURI,
+        nwdisable: '',
+        nwfaketop: ''
+      })
+    );
   }
 }
 
 // fixing embedding of local images
 function fixingEmbeddingOfLocalImages($htmlContent, fileDirectory) {
-  const hasURLProtocol = (url) => (
+  const hasURLProtocol = url =>
     url.indexOf('http://') === 0 ||
-      url.indexOf('https://') === 0 ||
-      url.indexOf('file://') === 0 ||
-      url.indexOf('data:') === 0
-  );
+    url.indexOf('https://') === 0 ||
+    url.indexOf('file://') === 0 ||
+    url.indexOf('data:') === 0;
 
   $htmlContent.find('img[src]').each((index, link) => {
     const currentSrc = $(link).attr('src');
@@ -83,7 +91,7 @@ function fixingEmbeddingOfLocalImages($htmlContent, fileDirectory) {
       }
 
       $(link).off();
-      $(link).on('click', (e) => {
+      $(link).on('click', e => {
         e.preventDefault();
         if (path) {
           currentSrc = encodeURIComponent(path);
@@ -96,7 +104,10 @@ function fixingEmbeddingOfLocalImages($htmlContent, fileDirectory) {
 
 function setContent(content, fileDirectory) {
   // removing the script tags from the content
-  const cleanedContent = content.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
+  const cleanedContent = content.replace(
+    /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi,
+    ''
+  );
   const viewerIframe = $('#iframeViewer').get(0);
 
   if (viewerIframe !== undefined) {
@@ -105,9 +116,9 @@ function setContent(content, fileDirectory) {
     // making all links open in the user default browser
     $(viewerIframe.contentWindow.document)
       .find('a')
-      .bind('click', (e) => {
+      .off('click')
+      .on('click', e => {
         e.preventDefault();
-        // TSCORE.IO.openFile($(this).attr('href'));
       });
   }
 
