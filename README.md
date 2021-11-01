@@ -1,3 +1,5 @@
+This repository is archived. Please use https://github.com/tagspaces/tagspaces-extensions instead.
+
 # General Viewer for TagSpaces
 
 A TagSpaces extension allowing to open files in the embedded browser.
